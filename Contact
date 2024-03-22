@@ -1,0 +1,1201 @@
+<?php
+
+namespace App\Entity;
+
+use ApiPlatform\Core\Annotation\ApiResource;
+use App\Repository\ContactRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use App\Controller\GetAllContactController;
+use App\Controller\AddContactController;
+use App\Controller\GetOneContactController;
+use App\Controller\UpdateContactLogoController;
+use App\Controller\UpdateContactCvController;
+use App\Controller\ContactByEntrepriseController;
+use App\Controller\ContactByCabinetController;
+use App\Controller\AllSalarieController;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use Doctrine\ORM\Mapping as ORM;
+
+
+
+#[ApiResource(
+    collectionOperations: [
+        'get' => [
+            "deserialize"=>false,
+        "controller"=>GetAllContactController::class,   
+            'normalization_context' => ['groups' => 'read:collection:contact']],
+        'contactbyentreprise' => [
+                "method"=>"GET",
+                "path"=>"/contacts/entreprise/{id}",
+                "deserialize"=>false,
+                "controller"=>ContactByEntrepriseController::class,
+                'normalization_context' => ['groups' => 'read:collection:contact']],
+        'contactbyCabinet' => [
+                "method"=>"GET",
+                "path"=>"/contacts/cabinet/{id}",
+                "deserialize"=>false,
+                "controller"=>ContactByCabinetController::class,
+                'normalization_context' => ['groups' => 'read:collection:contact']],
+        'allsalarie' => [
+                    "method"=>"GET",
+                    "path"=>"/contacts/salaries",
+                    "deserialize"=>false,
+                    "controller"=>AllSalarieController::class,
+                    'normalization_context' => ['groups' => 'read:collection:contact']],
+        'post'=>[
+        "deserialize"=>false,
+        "controller"=>AddContactController::class,  
+            'denormalization_context' => ['groups' => 'write:collection:contact'],
+        'normalization_context' => ['groups' => 'read:collection:contactres']],
+    ],
+    itemOperations: [
+        'get' => [
+            "deserialize"=>false,
+            "controller"=>GetOneContactController::class,
+            'normalization_context' => ['groups' => 'read:item:contact']],
+            'put' => [
+                'denormalization_context' => ['groups' => 'put:item:contact'],
+                'normalization_context' => ['groups' => 'read:item:contactres']
+            ],
+            'updatelogofile' => [
+                "method"=>"POST",
+                "path"=>"/contacts/{id}/logo",
+                "deserialize"=>false,
+                "controller"=>UpdateContactLogoController::class,
+                'normalization_context' => ['groups' => 'read:collection:contact']],
+            'updatecvfile' => [
+                    "method"=>"POST",
+                    "path"=>"/contacts/{id}/cv",
+                    "deserialize"=>false,
+                    "controller"=>UpdateContactCvController::class,
+                    'normalization_context' => ['groups' => 'read:collection:contact']],
+            'delete'
+    ]
+
+    
+
+)]
+#[ORM\Entity(repositoryClass: ContactRepository::class)]
+#[Vich\Uploadable]
+
+class Contact implements UserInterface, PasswordAuthenticatedUserInterface
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    #[Groups(['read:collection:deduction','write:collection:deduction','read:item:deduction','put:item:deduction','read:collection:prime','read:item:prime','read:collection:jourf','write:collection:jourf','read:item:jourf','put:item:jourf','read:collection:fichdepaie','write:collection:fichdepaie','read:item:fichdepaie','put:item:fichdepaie','read:collection:conge','write:collection:conge','read:item:conge','put:item:conge','read:collection:authorization','write:collection:authorization','read:item:authorization','put:item:authorization','read:collection:cotisation','write:collection:cotisation','read:item:cotisation','put:item:cotisation','read:collection:impo','write:collection:impo','read:item:impo','put:item:impo','read:collection:absence','write:collection:absence','read:item:absence','put:item:absence','read:collection:commission','write:collection:commission','read:item:commission','put:item:commission','read:collection:appointment','write:collection:appointment','read:item:appointment','put:item:appointment','read:collection:contact','read:item:contact','read:collection:prospect','write:collection:prospect','read:item:prospect','put:item:prospect'])]
+    private ?int $id = null;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:deduction','read:collection:prime','read:item:prime','read:collection:jourf','read:item:jourf','read:collection:fichdepaie','read:item:fichdepaie','read:collection:contact','write:collection:contact','read:item:contact','put:item:contact','read:collection:conge','read:item:conge','read:collection:authorization','read:item:authorization','read:collection:cotisation','read:item:cotisation','read:collection:impo','read:item:impo','read:collection:absence','read:item:absence'])]
+
+    private $username;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie','read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private $name;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie','read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private $surname;
+
+  
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private $phone;
+
+ 
+
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private $fax;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie','read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private $email;
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','read:item:contact'])]
+    private $icon;
+    
+    #[Vich\UploadableField(mapping: 'contact', fileNameProperty: 'icon')]
+    public $iconFile;
+
+  
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private $updatedAt;
+
+  
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+
+    private $password;
+
+
+    #[ORM\Column]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+
+    private array $roles = [];
+
+    #[ORM\ManyToMany(targetEntity: JourFerie::class, mappedBy: 'contact')]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $jourFeries;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: Absence::class)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $absences;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: Conge::class)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $conges;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: Authorization::class)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $authorizations;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: Impo::class)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $impos;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: Cotisation::class)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $cotisations;
+
+    #[ORM\ManyToMany(targetEntity: Prime::class, mappedBy: 'contact')]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie'])]
+
+    private Collection $primes;
+
+    #[ORM\OneToMany(mappedBy: 'contact', targetEntity: FicheDePaie::class)]
+    private Collection $ficheDePaies;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $matricule = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?\DateTimeInterface $dateNaissance = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $adresse = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $codePostale = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $ville = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $situationFamiliale = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?int $nombreEnfant = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $regime = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $regimeDePaiement = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?bool $chefDeFamille = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?\DateTimeInterface $dateRecrutement = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?\DateTimeInterface $dateDeDepart = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?bool $assuranceGroupe = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?float $pourcentageAssurance = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $qualificationProfissionelle = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $categorie = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $echeleon = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $section = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','read:item:contact'])]
+    private ?string $cv = null;
+
+    #[Vich\UploadableField(mapping: 'contactcv', fileNameProperty: 'cv')]
+    public $cvFile;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $imposition = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $exploitation = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $numCnss = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(['read:collection:fichdepaie','read:item:fichdepaie','read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?float $salaireDeBase = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $banque = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $numCompte = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $modeDePaiement = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $remarquePaiement = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $pieceJointePaiement = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $groupe = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?string $grade = null;
+
+    #[ORM\ManyToOne(inversedBy: 'contacts')]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?Entreprise $entreprise = null;
+
+    #[ORM\ManyToOne(inversedBy: 'contacts')]
+    #[Groups(['read:collection:contact','write:collection:contact','read:item:contact','put:item:contact'])]
+    private ?CabinetComptable $cabinetComptable = null;
+
+    #[ORM\OneToMany(mappedBy: 'salarie', targetEntity: Deduction::class)]
+    private Collection $deductions;
+
+  
+
+    public function __construct()
+    {
+        $this->jourFeries = new ArrayCollection();
+        $this->absences = new ArrayCollection();
+        $this->conges = new ArrayCollection();
+        $this->authorizations = new ArrayCollection();
+        $this->impos = new ArrayCollection();
+        $this->cotisations = new ArrayCollection();
+        $this->primes = new ArrayCollection();
+        $this->ficheDePaies = new ArrayCollection();
+        $this->deductions = new ArrayCollection();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+   
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function getSurname(): ?string
+    {
+        return $this->surname;
+    }
+
+    public function setSurname(?string $surname): self
+    {
+        $this->surname = $surname;
+
+        return $this;
+    }
+
+    
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?string $phone): self
+    {
+        $this->phone = $phone;
+
+        return $this;
+    }
+
+  
+
+
+
+    public function getFax(): ?string
+    {
+        return $this->fax;
+    }
+
+    public function setFax(?string $fax): self
+    {
+        $this->fax = $fax;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function setCvFile(File $cvFile = null)
+    {
+        $this->cvFile = $cvFile;
+    }
+
+    public function getCvFile()
+    {
+        return $this->cvFile;
+    }
+
+    public function setIconFile(File $iconFile = null)
+    {
+        $this->iconFile = $iconFile;
+    }
+
+    public function getIconFile()
+    {
+        return $this->iconFile;
+    }
+    public function getIcon(): ?string
+    {
+        return $this->icon;
+    }
+
+    public function setIcon(?string $icon): self
+    {
+        $this->icon = $icon;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(?\DateTimeInterface $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+
+    public function getUsername(): string
+    {
+        return (string) $this->username;
+    }
+
+    public function setUsername(string $username): self
+    {
+        $this->username = $username;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->username;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Returning a salt is only needed, if you are not using a modern
+     * hashing algorithm (e.g. bcrypt or sodium) in your security.yaml.
+     *
+     * @see UserInterface
+     */
+    public function getSalt(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
+    }
+     /**
+     * Get the value of plainPassword
+     */
+    public function getPlainPassword()
+    {
+        return $this->plainPassword;
+    }
+
+    /**
+     * Set the value of plainPassword
+     *
+     * @return  self
+     */
+    public function setPlainPassword($plainPassword)
+    {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, JourFerie>
+     */
+    public function getJourFeries(): Collection
+    {
+        return $this->jourFeries;
+    }
+
+    public function addJourFery(JourFerie $jourFery): self
+    {
+        if (!$this->jourFeries->contains($jourFery)) {
+            $this->jourFeries->add($jourFery);
+            $jourFery->addContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeJourFery(JourFerie $jourFery): self
+    {
+        if ($this->jourFeries->removeElement($jourFery)) {
+            $jourFery->removeContact($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Absence>
+     */
+    public function getAbsences(): Collection
+    {
+        return $this->absences;
+    }
+
+    public function addAbsence(Absence $absence): self
+    {
+        if (!$this->absences->contains($absence)) {
+            $this->absences->add($absence);
+            $absence->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAbsence(Absence $absence): self
+    {
+        if ($this->absences->removeElement($absence)) {
+            // set the owning side to null (unless already changed)
+            if ($absence->getContact() === $this) {
+                $absence->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Conge>
+     */
+    public function getConges(): Collection
+    {
+        return $this->conges;
+    }
+
+    public function addConge(Conge $conge): self
+    {
+        if (!$this->conges->contains($conge)) {
+            $this->conges->add($conge);
+            $conge->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConge(Conge $conge): self
+    {
+        if ($this->conges->removeElement($conge)) {
+            // set the owning side to null (unless already changed)
+            if ($conge->getContact() === $this) {
+                $conge->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Authorization>
+     */
+    public function getAuthorizations(): Collection
+    {
+        return $this->authorizations;
+    }
+
+    public function addAuthorization(Authorization $authorization): self
+    {
+        if (!$this->authorizations->contains($authorization)) {
+            $this->authorizations->add($authorization);
+            $authorization->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAuthorization(Authorization $authorization): self
+    {
+        if ($this->authorizations->removeElement($authorization)) {
+            // set the owning side to null (unless already changed)
+            if ($authorization->getContact() === $this) {
+                $authorization->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Impo>
+     */
+    public function getImpos(): Collection
+    {
+        return $this->impos;
+    }
+
+    public function addImpo(Impo $impo): self
+    {
+        if (!$this->impos->contains($impo)) {
+            $this->impos->add($impo);
+            $impo->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImpo(Impo $impo): self
+    {
+        if ($this->impos->removeElement($impo)) {
+            // set the owning side to null (unless already changed)
+            if ($impo->getContact() === $this) {
+                $impo->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Cotisation>
+     */
+    public function getCotisations(): Collection
+    {
+        return $this->cotisations;
+    }
+
+    public function addCotisation(Cotisation $cotisation): self
+    {
+        if (!$this->cotisations->contains($cotisation)) {
+            $this->cotisations->add($cotisation);
+            $cotisation->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCotisation(Cotisation $cotisation): self
+    {
+        if ($this->cotisations->removeElement($cotisation)) {
+            // set the owning side to null (unless already changed)
+            if ($cotisation->getContact() === $this) {
+                $cotisation->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Prime>
+     */
+    public function getPrimes(): Collection
+    {
+        return $this->primes;
+    }
+
+    public function addPrime(Prime $prime): self
+    {
+        if (!$this->primes->contains($prime)) {
+            $this->primes->add($prime);
+            $prime->addContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removePrime(Prime $prime): self
+    {
+        if ($this->primes->removeElement($prime)) {
+            $prime->removeContact($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, FicheDePaie>
+     */
+    public function getFicheDePaies(): Collection
+    {
+        return $this->ficheDePaies;
+    }
+
+    public function addFicheDePaie(FicheDePaie $ficheDePaie): self
+    {
+        if (!$this->ficheDePaies->contains($ficheDePaie)) {
+            $this->ficheDePaies->add($ficheDePaie);
+            $ficheDePaie->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFicheDePaie(FicheDePaie $ficheDePaie): self
+    {
+        if ($this->ficheDePaies->removeElement($ficheDePaie)) {
+            // set the owning side to null (unless already changed)
+            if ($ficheDePaie->getContact() === $this) {
+                $ficheDePaie->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getMatricule(): ?string
+    {
+        return $this->matricule;
+    }
+
+    public function setMatricule(?string $matricule): self
+    {
+        $this->matricule = $matricule;
+
+        return $this;
+    }
+
+    public function getDateNaissance(): ?\DateTimeInterface
+    {
+        return $this->dateNaissance;
+    }
+
+    public function setDateNaissance(?\DateTimeInterface $dateNaissance): self
+    {
+        $this->dateNaissance = $dateNaissance;
+
+        return $this;
+    }
+
+    public function getAdresse(): ?string
+    {
+        return $this->adresse;
+    }
+
+    public function setAdresse(?string $adresse): self
+    {
+        $this->adresse = $adresse;
+
+        return $this;
+    }
+
+    public function getCodePostale(): ?string
+    {
+        return $this->codePostale;
+    }
+
+    public function setCodePostale(?string $codePostale): self
+    {
+        $this->codePostale = $codePostale;
+
+        return $this;
+    }
+
+    public function getVille(): ?string
+    {
+        return $this->ville;
+    }
+
+    public function setVille(?string $ville): self
+    {
+        $this->ville = $ville;
+
+        return $this;
+    }
+
+    public function getSituationFamiliale(): ?string
+    {
+        return $this->situationFamiliale;
+    }
+
+    public function setSituationFamiliale(?string $situationFamiliale): self
+    {
+        $this->situationFamiliale = $situationFamiliale;
+
+        return $this;
+    }
+
+    public function getNombreEnfant(): ?int
+    {
+        return $this->nombreEnfant;
+    }
+
+    public function setNombreEnfant(?int $nombreEnfant): self
+    {
+        $this->nombreEnfant = $nombreEnfant;
+
+        return $this;
+    }
+
+    public function getRegime(): ?string
+    {
+        return $this->regime;
+    }
+
+    public function setRegime(?string $regime): self
+    {
+        $this->regime = $regime;
+
+        return $this;
+    }
+
+    public function getRegimeDePaiement(): ?string
+    {
+        return $this->regimeDePaiement;
+    }
+
+    public function setRegimeDePaiement(?string $regimeDePaiement): self
+    {
+        $this->regimeDePaiement = $regimeDePaiement;
+
+        return $this;
+    }
+
+    public function isChefDeFamille(): ?bool
+    {
+        return $this->chefDeFamille;
+    }
+
+    public function setChefDeFamille(?bool $chefDeFamille): self
+    {
+        $this->chefDeFamille = $chefDeFamille;
+
+        return $this;
+    }
+
+    public function getDateRecrutement(): ?\DateTimeInterface
+    {
+        return $this->dateRecrutement;
+    }
+
+    public function setDateRecrutement(?\DateTimeInterface $dateRecrutement): self
+    {
+        $this->dateRecrutement = $dateRecrutement;
+
+        return $this;
+    }
+
+    public function getDateDeDepart(): ?\DateTimeInterface
+    {
+        return $this->dateDeDepart;
+    }
+
+    public function setDateDeDepart(?\DateTimeInterface $dateDeDepart): self
+    {
+        $this->dateDeDepart = $dateDeDepart;
+
+        return $this;
+    }
+
+    public function isAssuranceGroupe(): ?bool
+    {
+        return $this->assuranceGroupe;
+    }
+
+    public function setAssuranceGroupe(?bool $assuranceGroupe): self
+    {
+        $this->assuranceGroupe = $assuranceGroupe;
+
+        return $this;
+    }
+
+    public function getPourcentageAssurance(): ?float
+    {
+        return $this->pourcentageAssurance;
+    }
+
+    public function setPourcentageAssurance(?float $pourcentageAssurance): self
+    {
+        $this->pourcentageAssurance = $pourcentageAssurance;
+
+        return $this;
+    }
+
+    public function getQualificationProfissionelle(): ?string
+    {
+        return $this->qualificationProfissionelle;
+    }
+
+    public function setQualificationProfissionelle(?string $qualificationProfissionelle): self
+    {
+        $this->qualificationProfissionelle = $qualificationProfissionelle;
+
+        return $this;
+    }
+
+    public function getCategorie(): ?string
+    {
+        return $this->categorie;
+    }
+
+    public function setCategorie(?string $categorie): self
+    {
+        $this->categorie = $categorie;
+
+        return $this;
+    }
+
+    public function getEcheleon(): ?string
+    {
+        return $this->echeleon;
+    }
+
+    public function setEcheleon(?string $echeleon): self
+    {
+        $this->echeleon = $echeleon;
+
+        return $this;
+    }
+
+    public function getSection(): ?string
+    {
+        return $this->section;
+    }
+
+    public function setSection(?string $section): self
+    {
+        $this->section = $section;
+
+        return $this;
+    }
+
+    public function getCv(): ?string
+    {
+        return $this->cv;
+    }
+
+    public function setCv(?string $cv): self
+    {
+        $this->cv = $cv;
+
+        return $this;
+    }
+
+    public function getImposition(): ?string
+    {
+        return $this->imposition;
+    }
+
+    public function setImposition(?string $imposition): self
+    {
+        $this->imposition = $imposition;
+
+        return $this;
+    }
+
+    public function getExploitation(): ?string
+    {
+        return $this->exploitation;
+    }
+
+    public function setExploitation(?string $exploitation): self
+    {
+        $this->exploitation = $exploitation;
+
+        return $this;
+    }
+
+    public function getNumCnss(): ?string
+    {
+        return $this->numCnss;
+    }
+
+    public function setNumCnss(?string $numCnss): self
+    {
+        $this->numCnss = $numCnss;
+
+        return $this;
+    }
+
+    public function getSalaireDeBase(): ?float
+    {
+        return $this->salaireDeBase;
+    }
+
+    public function setSalaireDeBase(?float $salaireDeBase): self
+    {
+        $this->salaireDeBase = $salaireDeBase;
+
+        return $this;
+    }
+
+    public function getBanque(): ?string
+    {
+        return $this->banque;
+    }
+
+    public function setBanque(?string $banque): self
+    {
+        $this->banque = $banque;
+
+        return $this;
+    }
+
+    public function getNumCompte(): ?string
+    {
+        return $this->numCompte;
+    }
+
+    public function setNumCompte(?string $numCompte): self
+    {
+        $this->numCompte = $numCompte;
+
+        return $this;
+    }
+
+    public function getModeDePaiement(): ?string
+    {
+        return $this->modeDePaiement;
+    }
+
+    public function setModeDePaiement(?string $modeDePaiement): self
+    {
+        $this->modeDePaiement = $modeDePaiement;
+
+        return $this;
+    }
+
+    public function getRemarquePaiement(): ?string
+    {
+        return $this->remarquePaiement;
+    }
+
+    public function setRemarquePaiement(?string $remarquePaiement): self
+    {
+        $this->remarquePaiement = $remarquePaiement;
+
+        return $this;
+    }
+
+    public function getPieceJointePaiement(): ?string
+    {
+        return $this->pieceJointePaiement;
+    }
+
+    public function setPieceJointePaiement(?string $pieceJointePaiement): self
+    {
+        $this->pieceJointePaiement = $pieceJointePaiement;
+
+        return $this;
+    }
+
+    public function getGroupe(): ?string
+    {
+        return $this->groupe;
+    }
+
+    public function setGroupe(?string $groupe): self
+    {
+        $this->groupe = $groupe;
+
+        return $this;
+    }
+
+    public function getGrade(): ?string
+    {
+        return $this->grade;
+    }
+
+    public function setGrade(?string $grade): self
+    {
+        $this->grade = $grade;
+
+        return $this;
+    }
+
+    public function getEntreprise(): ?Entreprise
+    {
+        return $this->entreprise;
+    }
+
+    public function setEntreprise(?Entreprise $entreprise): self
+    {
+        $this->entreprise = $entreprise;
+
+        return $this;
+    }
+
+    public function getCabinetComptable(): ?CabinetComptable
+    {
+        return $this->cabinetComptable;
+    }
+
+    public function setCabinetComptable(?CabinetComptable $cabinetComptable): self
+    {
+        $this->cabinetComptable = $cabinetComptable;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Deduction>
+     */
+    public function getDeductions(): Collection
+    {
+        return $this->deductions;
+    }
+
+    public function addDeduction(Deduction $deduction): self
+    {
+        if (!$this->deductions->contains($deduction)) {
+            $this->deductions->add($deduction);
+            $deduction->setSalarie($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDeduction(Deduction $deduction): self
+    {
+        if ($this->deductions->removeElement($deduction)) {
+            // set the owning side to null (unless already changed)
+            if ($deduction->getSalarie() === $this) {
+                $deduction->setSalarie(null);
+            }
+        }
+
+        return $this;
+    }
+
+}
